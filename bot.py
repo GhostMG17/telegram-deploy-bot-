@@ -9,6 +9,9 @@ from handlers.progress import today, progress
 from handlers.report import report
 from handlers.misc import unknown_message
 
+import sys
+print("Python version:", sys.version)
+
 init_db()
 
 app = ApplicationBuilder().token(BOT_TOKEN).build()
