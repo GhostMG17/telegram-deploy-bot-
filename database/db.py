@@ -1,3 +1,4 @@
+import os
 import sqlite3
 from datetime import date
 
@@ -22,12 +23,12 @@ def init_db():
     """)
 
     cursor.execute("""
-            CREATE TABLE IF NOT EXISTS daily_check (
-                user_id INTEGER,
-                date TEXT,
-                checked INTEGER DEFAULT 0,
-                PRIMARY KEY (user_id, date)
-            )
+    CREATE TABLE IF NOT EXISTS daily_check (
+        user_id INTEGER,
+        date TEXT,
+        checked INTEGER DEFAULT 0,
+        PRIMARY KEY (user_id, date)
+    )
     """)
 
     cursor.execute("""
@@ -80,6 +81,11 @@ def init_tasks():
         if cursor.fetchone() is None:
             cursor.execute("INSERT INTO fitness_tasks (name) VALUES (?)", (name,))
     conn.commit()
+
+if not os.path.exists(DB_NAME):
+    init_db()
+    init_tasks()
+
 
 
 def add_user(user_id, name):
