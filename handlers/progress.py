@@ -17,7 +17,7 @@ async def today(update: Update, context: ContextTypes.DEFAULT_TYPE, query=None):
 
     if query:
         await query.message.reply_text(msg)
-    else:  # Если вызвано через команду /today
+    else:
         await update.message.reply_text(msg)
 
 async def progress(update: Update, context: ContextTypes.DEFAULT_TYPE, query=None):

@@ -1,9 +1,11 @@
+from database.db import add_xp
 from handlers.progress import today, progress
 from handlers.report import report
 from telegram import Update
 from telegram.ext import ContextTypes
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from database import db as db
+from handlers.profile import profile
 
 
 async def done_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE, query=None):
@@ -64,16 +66,40 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await report(update, context, query=query)
         return
 
+    elif data == "profile":
+        await profile(update, context, query=query)
+        return
+
+    elif data == "menu":
+        from handlers.menu import show_menu
+        await show_menu(update, context, query=query)
+        return
+
     if data == "confirm":
         if not selected:
             await query.edit_message_text("❗ Ты не выбрал ни одной задачи.")
             return
 
+        XP_PER_TASK = {
+            "spiritual": 10,
+            "fitness": 5
+        }
+
+        total_xp = 0
+
         for task_type, task_id in selected:
             db.mark_done(user_id, task_id, task_type)
+            total_xp += XP_PER_TASK.get(task_type, 0)
+
+        new_xp, new_level = add_xp(user_id, total_xp)
 
         context.user_data["selected_tasks"] = set()
-        await query.edit_message_text(f"✅ Отмечено задач: {len(selected)}")
+
+        await query.edit_message_text(
+            f"✅ Отмечено задач: {len(selected)}\n"
+            f"✨ +{total_xp} XP\n"
+            f"🏅 Уровень: {new_level}"
+        )
         return
 
     if data.startswith("toggle:"):

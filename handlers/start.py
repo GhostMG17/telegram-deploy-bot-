@@ -1,6 +1,6 @@
 from telegram.ext import CommandHandler, ConversationHandler, MessageHandler, filters
 from database import db as db
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from handlers.menu import show_menu
 
 ASK_NAME = 1
 
@@ -10,19 +10,11 @@ async def start(update, context):
     cursor.execute("SELECT name FROM users WHERE id=?", (user_id,))
     res = cursor.fetchone()
 
-    keyboard = [
-        [InlineKeyboardButton("📅 Посмотреть задачи", callback_data='today')],
-        [InlineKeyboardButton("✅ Отметить задачу", callback_data='done')],
-        [InlineKeyboardButton("📈 Проверить прогресс", callback_data='progress')],
-        [InlineKeyboardButton("📊 Скачать отчёт", callback_data='report')]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
     if res:
         await update.message.reply_text(
-            f"👋 С возвращением, {res[0]}!\n\nНажми на кнопку, чтобы начать:",
-            reply_markup=reply_markup
+            f"👋 С возвращением, {res[0]}!"
         )
+        await show_menu(update, context)
         return ConversationHandler.END
     else:
         await update.message.reply_text(
@@ -35,18 +27,9 @@ async def ask_name(update, context):
     name = update.message.text.strip()
     db.add_user(user_id, name)
 
-    keyboard = [
-        [InlineKeyboardButton("📅 Посмотреть задачи", callback_data='today')],
-        [InlineKeyboardButton("✅ Отметить задачу", callback_data='done')],
-        [InlineKeyboardButton("📈 Проверить прогресс", callback_data='progress')],
-        [InlineKeyboardButton("📊 Скачать отчёт", callback_data='report')]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(f"Спасибо, {name}! 🎉")
+    await show_menu(update, context)
 
-    await update.message.reply_text(
-        f"Спасибо, {name}! 🎉 Нажми на кнопку, чтобы начать:",
-        reply_markup=reply_markup
-    )
     return ConversationHandler.END
 
 start_handler = ConversationHandler(

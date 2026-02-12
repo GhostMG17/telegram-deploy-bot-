@@ -12,6 +12,24 @@ def init_db():
         name TEXT
     )
     """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS user_xp (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        xp INTEGER DEFAULT 0,
+        level INTEGER DEFAULT 1
+    )
+    """)
+
+    cursor.execute("""
+            CREATE TABLE IF NOT EXISTS daily_check (
+                user_id INTEGER,
+                date TEXT,
+                checked INTEGER DEFAULT 0,
+                PRIMARY KEY (user_id, date)
+            )
+    """)
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS spiritual_tasks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,6 +53,7 @@ def init_db():
     )
     """)
     conn.commit()
+
 
 def init_tasks():
     spiritual = [
@@ -61,6 +80,7 @@ def init_tasks():
         if cursor.fetchone() is None:
             cursor.execute("INSERT INTO fitness_tasks (name) VALUES (?)", (name,))
     conn.commit()
+
 
 def add_user(user_id, name):
     cursor.execute("INSERT OR IGNORE INTO users (id, name) VALUES (?, ?)", (user_id, name))
@@ -107,7 +127,6 @@ def is_task_done_today(user_id, task_id, task_type):
     return cursor.fetchone() is not None
 
 
-
 def get_report_table():
     cursor.execute("SELECT id, name FROM users")
     users = cursor.fetchall()
@@ -148,4 +167,113 @@ def get_report_table():
     return report, all_tasks
 
 
-    return report, all_tasks
+LEVELS = [
+    (1, 0),
+    (2, 150),
+    (3, 400),
+    (4, 800),
+    (5, 1400)
+]
+
+
+def calculate_level(xp: int) -> int:
+    level = 1
+    for lvl, threshold in LEVELS:
+        if xp >= threshold:
+            level = lvl
+        else:
+            break
+    return level
+
+
+def get_user_xp(user_id: int):
+    cursor.execute("SELECT xp, level FROM user_xp WHERE user_id=?", (user_id,))
+    row = cursor.fetchone()
+    if not row:
+        cursor.execute("INSERT INTO user_xp (user_id, xp, level) VALUES (?, 0, 1)", (user_id,))
+        conn.commit()
+        return 0, 1
+    return row
+
+
+def add_xp(user_id: int, amount: int):
+    xp, _ = get_user_xp(user_id)
+    new_xp = max(0, xp + amount)
+    new_level = calculate_level(new_xp)
+
+    cursor.execute("""
+        INSERT INTO user_xp (user_id, xp, level)
+        VALUES (?, ?, ?)
+        ON CONFLICT(user_id) DO UPDATE SET xp=?, level=?
+    """, (user_id, new_xp, new_level, new_xp, new_level))
+    conn.commit()
+
+    return new_xp, new_level
+
+
+def get_today_progress(user_id: int):
+    today = date.today().isoformat()
+
+    cursor.execute("SELECT COUNT(*) FROM spiritual_tasks")
+    total_spiritual = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM fitness_tasks")
+    total_fitness = cursor.fetchone()[0]
+
+    cursor.execute("""
+        SELECT COUNT(*) FROM progress
+        WHERE user_id=? AND task_type='spiritual' AND date=?
+    """, (user_id, today))
+    done_spiritual = cursor.fetchone()[0]
+
+    cursor.execute("""
+        SELECT COUNT(*) FROM progress
+        WHERE user_id=? AND task_type='fitness' AND date=?
+    """, (user_id, today))
+    done_fitness = cursor.fetchone()[0]
+
+    return done_spiritual, total_spiritual, done_fitness, total_fitness
+
+
+def apply_daily_penalty(user_id: int):
+    """Применяем штраф, если пользователь ничего не сделал сегодня."""
+    today_str = date.today().isoformat()
+
+    cursor.execute("SELECT checked FROM daily_check WHERE user_id=? AND date=?", (user_id, today_str))
+    if cursor.fetchone():
+        return
+
+    cursor.execute("SELECT 1 FROM progress WHERE user_id=? AND date=? LIMIT 1", (user_id, today_str))
+    did_anything = cursor.fetchone() is not None
+
+    if not did_anything:
+        add_xp(user_id, -10)  # штраф за пропуск
+
+    cursor.execute("INSERT INTO daily_check (user_id, date, checked) VALUES (?, ?, 1)", (user_id, today_str))
+    conn.commit()
+
+
+def get_level_name(level: int) -> str:
+    return {
+        1: "🌱 Начало",
+        2: "🔥 В пути",
+        3: "💪 Укрепился",
+        4: "🏆 Стабильность",
+        5: "👑 Мастер Рамадана"
+    }.get(level, "🌱 Начало")
+
+
+def get_user_profile(user_id: int):
+    cursor.execute("""
+        SELECT xp, level FROM user_xp
+        WHERE user_id=?
+    """, (user_id,))
+    row = cursor.fetchone()
+    if not row:
+        cursor.execute(
+            "INSERT INTO user_xp (user_id, xp, level) VALUES (?, 0, 1)",
+            (user_id,)
+        )
+        conn.commit()
+        return 0, 1
+    return row
