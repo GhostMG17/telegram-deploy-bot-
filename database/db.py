@@ -2,8 +2,9 @@ import os
 import sqlite3
 from datetime import date
 
-DB_NAME = os.path.join(os.getcwd(), "data", "ramadan_bot.db")
-conn = sqlite3.connect(DB_NAME, check_same_thread=False)
+DB_PATH = os.path.join(os.getcwd(), "data", "ramadan_bot.db")
+os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+conn = sqlite3.connect(DB_PATH, check_same_thread=False)
 cursor = conn.cursor()
 
 def init_db():
@@ -37,12 +38,14 @@ def init_db():
         name TEXT
     )
     """)
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS fitness_tasks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT
     )
     """)
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS progress (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,10 +85,8 @@ def init_tasks():
             cursor.execute("INSERT INTO fitness_tasks (name) VALUES (?)", (name,))
     conn.commit()
 
-if not os.path.exists(DB_NAME):
-    os.makedirs(os.path.dirname(DB_NAME), exist_ok=True)
-    init_db()
-    init_tasks()
+init_db()
+init_tasks()
 
 
 def add_user(user_id, name):
