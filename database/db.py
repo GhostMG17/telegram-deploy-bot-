@@ -2,7 +2,7 @@ import os
 import sqlite3
 from datetime import date
 
-DB_NAME = "ramadan_bot.db"
+DB_NAME = os.path.join(os.getcwd(), "data", "ramadan_bot.db")
 conn = sqlite3.connect(DB_NAME, check_same_thread=False)
 cursor = conn.cursor()
 
@@ -83,9 +83,9 @@ def init_tasks():
     conn.commit()
 
 if not os.path.exists(DB_NAME):
+    os.makedirs(os.path.dirname(DB_NAME), exist_ok=True)
     init_db()
     init_tasks()
-
 
 
 def add_user(user_id, name):

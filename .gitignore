@@ -23,7 +23,7 @@ Thumbs.db
 # Database
 *.sqlite
 *.db
-ramadan_bot.db
+data/ramadan_bot.db
 
 # Excel reports
 *.xlsx
