@@ -1,11 +1,12 @@
 from database.db import add_xp
-from handlers.progress import today, progress
+from handlers.progress import today
 from handlers.report import report
 from telegram import Update
 from telegram.ext import ContextTypes
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from database import db as db
 from handlers.profile import profile
+from handlers.leaderboard import leaderboard_handler
 
 
 async def done_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE, query=None):
@@ -58,9 +59,6 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "done":
         await done_buttons(update, context, query=query)
         return
-    elif data == "progress":
-        await progress(update, context, query=query)
-        return
 
     elif data == "report":
         await report(update, context, query=query)
@@ -68,6 +66,10 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == "profile":
         await profile(update, context, query=query)
+        return
+
+    elif data == "leaderboard":
+        await leaderboard_handler(update, context, query=query)
         return
 
     elif data == "menu":

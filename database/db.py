@@ -242,24 +242,6 @@ def get_today_progress(user_id: int):
     return done_spiritual, total_spiritual, done_fitness, total_fitness
 
 
-def apply_daily_penalty(user_id: int):
-    """Применяем штраф, если пользователь ничего не сделал сегодня."""
-    today_str = date.today().isoformat()
-
-    cursor.execute("SELECT checked FROM daily_check WHERE user_id=? AND date=?", (user_id, today_str))
-    if cursor.fetchone():
-        return
-
-    cursor.execute("SELECT 1 FROM progress WHERE user_id=? AND date=? LIMIT 1", (user_id, today_str))
-    did_anything = cursor.fetchone() is not None
-
-    if not did_anything:
-        add_xp(user_id, -10)  # штраф за пропуск
-
-    cursor.execute("INSERT INTO daily_check (user_id, date, checked) VALUES (?, ?, 1)", (user_id, today_str))
-    conn.commit()
-
-
 def get_level_name(level: int) -> str:
     return {
         1: "🌱 Начало",
@@ -284,3 +266,25 @@ def get_user_profile(user_id: int):
         conn.commit()
         return 0, 1
     return row
+
+
+def get_leaderboard_data(top_n=5):
+    cursor.execute("""
+        SELECT u.name, ux.xp, ux.level
+        FROM user_xp ux
+        JOIN users u ON ux.user_id = u.id
+        ORDER BY ux.xp DESC
+        LIMIT ?
+    """, (top_n,))
+
+    rows = cursor.fetchall()
+    leaderboard = []
+    for i, (name, xp, level) in enumerate(rows, 1):
+        leaderboard.append({
+            "rank": i,
+            "name": name,
+            "xp": xp,
+            "level": level,
+            "level_name": get_level_name(level)
+        })
+    return leaderboard

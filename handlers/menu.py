@@ -5,8 +5,8 @@ async def show_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, query=No
     keyboard = [
         [InlineKeyboardButton("📅 Посмотреть задачи", callback_data='today')],
         [InlineKeyboardButton("✅ Отметить задачу", callback_data='done')],
-        [InlineKeyboardButton("📈 Проверить прогресс", callback_data='progress')],
         [InlineKeyboardButton("👤 Профиль", callback_data='profile')],
+        [InlineKeyboardButton("📘 Статистика", callback_data='leaderboard')],
         [InlineKeyboardButton("📊 Скачать отчёт", callback_data='report')],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)

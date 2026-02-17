@@ -59,8 +59,7 @@ async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE, query=None
         f"({done_fitness} × {XP_PER_TASK['fitness']} XP = +{xp_fitness} XP)\n"
         f"💫 XP сегодня: +{xp_today} XP\n\n"
         f"🏅 Уровни и награды:\n"
-        + "\n".join(f"{lvl} — {emoji}" for lvl, emoji in LEVEL_EMOJIS.items()) +
-        f"❗\n\n✨ Пропуск задач → −10 XP"
+        + "\n".join(f"{lvl} — {emoji}" for lvl, emoji in LEVEL_EMOJIS.items())
     )
 
     keyboard = [[InlineKeyboardButton("🏠 Главное меню", callback_data="menu")]]
