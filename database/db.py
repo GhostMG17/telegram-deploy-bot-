@@ -268,7 +268,7 @@ def get_user_profile(user_id: int):
     return row
 
 
-def get_leaderboard_data(top_n=5):
+def get_leaderboard_data(top_n=15):
     cursor.execute("""
         SELECT u.name, ux.xp, ux.level
         FROM user_xp ux
