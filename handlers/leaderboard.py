@@ -4,7 +4,7 @@ from database.db import get_leaderboard_data, get_level_name
 
 
 async def leaderboard_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, query=None):
-    leaderboard = get_leaderboard_data(top_n=5)
+    leaderboard = get_leaderboard_data(top_n=15)
 
     if not leaderboard:
         msg = "Пока нет данных для лидерборда 😅"
